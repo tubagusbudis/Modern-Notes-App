@@ -3,3 +3,4 @@ node_modules
 .DB_Store
 dist/
 build/
+AGENTS.md
