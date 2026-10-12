@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, Pin, Heart, Tag, Trash2, Settings, Sparkles } from 'lucide-react';
+import { FileText, Pin, Heart, Tag, Trash2, Settings, NotebookDot } from 'lucide-react';
 import clsx from 'clsx';
 
 interface SidebarProps {
@@ -36,7 +36,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       >
         <div className="h-16 flex items-center px-6 border-b border-border-soft/50">
-          <Sparkles className="w-5 h-5 text-accent mr-2" />
+          <NotebookDot className="w-5 h-5 text-accent mr-2" />
           <span className="font-semibold text-primary text-lg">MyNotes</span>
         </div>
 

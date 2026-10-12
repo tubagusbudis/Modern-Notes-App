@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, Trash2, X, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { useNote, useNoteMutations } from '../hooks/useNotes';
 import { usePageEnterAnimation } from '../../../lib/animations';
+import { RichTextEditor } from '../../../components/ui/RichTextEditor';
 
 export function NoteEditor() {
   const navigate = useNavigate();
@@ -258,11 +259,10 @@ export function NoteEditor() {
           </div>
         )}
 
-        <textarea 
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+        <RichTextEditor 
+          content={content}
+          onChange={setContent}
           placeholder="Start writing..." 
-          className="flex-1 w-full min-h-[500px] resize-none bg-transparent border-none outline-none text-primary placeholder-muted text-lg leading-relaxed"
         />
       </div>
     </div>

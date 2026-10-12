@@ -99,9 +99,10 @@ export function NoteDetail() {
           </a>
         )}
 
-        <div className="text-lg text-primary leading-relaxed whitespace-pre-wrap">
-          {note.content}
-        </div>
+        <div 
+          className="text-lg text-primary leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: note.content }}
+        />
       </div>
     </div>
   );

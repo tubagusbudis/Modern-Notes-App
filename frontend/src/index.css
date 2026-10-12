@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-app: var(--bg-app);
@@ -66,4 +67,56 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* TipTap Editor & Prose Overrides */
+.ProseMirror, .prose {
+  color: var(--text-primary) !important;
+}
+
+.ProseMirror p, .prose p,
+.ProseMirror h1, .prose h1,
+.ProseMirror h2, .prose h2,
+.ProseMirror h3, .prose h3,
+.ProseMirror h4, .prose h4,
+.ProseMirror h5, .prose h5,
+.ProseMirror h6, .prose h6,
+.ProseMirror li, .prose li,
+.ProseMirror strong, .prose strong,
+.ProseMirror blockquote, .prose blockquote {
+  color: var(--text-primary) !important;
+}
+
+/* TipTap Editor Styles */
+.tiptap p.is-editor-empty:first-child::before {
+  color: var(--text-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+ul[data-type="taskList"] p {
+  margin: 0;
+}
+
+ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  user-select: none;
+  margin-top: 0.25rem;
+}
+
+ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
 }
