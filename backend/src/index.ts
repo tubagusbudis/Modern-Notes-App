@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import authRoutes from './routes/authRoutes';
 import notesRoutes from './routes/notesRoutes';
 import tagsRoutes from './routes/tagsRoutes';
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/tags', tagsRoutes);
 

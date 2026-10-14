@@ -11,8 +11,12 @@ import {
   toggleFavorite
 } from '../controllers/notesController';
 import { upload } from '../middlewares/upload';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const router = Router();
+
+// All notes routes require authentication
+router.use(authMiddleware);
 
 router.get('/', getNotes);
 router.post('/', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), createNote);

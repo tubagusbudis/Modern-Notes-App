@@ -6,6 +6,23 @@
 const API_BASE = 'http://localhost:5000/api';
 
 // ──────────────────────────────────────────────
+// Token Management
+// ──────────────────────────────────────────────
+const TOKEN_KEY = 'mynotes_token';
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function removeToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+// ──────────────────────────────────────────────
 // Types (same interface the frontend already uses)
 // ──────────────────────────────────────────────
 export interface Note {
@@ -36,6 +53,11 @@ export interface User {
   id: string;
   username: string;
   createdAt?: string;
+}
+
+export interface AuthData {
+  user: User;
+  token: string;
 }
 
 export interface ApiResponse<T> {
@@ -71,6 +93,12 @@ async function request<T>(
 
   const headers = new Headers(options.headers || {});
   
+  // Attach JWT token if available
+  const token = getToken();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   if (!(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   } else {
@@ -104,24 +132,35 @@ async function request<T>(
 // Auth API
 // ──────────────────────────────────────────────
 export const authApi = {
-  async login(username: string, password: string): Promise<User> {
-    return request<User>('/auth/login', {
+  async login(username: string, password: string): Promise<AuthData> {
+    const data = await request<AuthData>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     });
+    // Store the token on successful login
+    setToken(data.token);
+    return data;
   },
 
-  async register(username: string, password: string): Promise<User> {
-    return request<User>('/auth/register', {
+  async register(username: string, password: string): Promise<AuthData> {
+    const data = await request<AuthData>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
+    });
+    // Store the token on successful registration
+    setToken(data.token);
+    return data;
+  },
+
+  async forgotPassword(username: string, newPassword: string): Promise<{ message: string }> {
+    return request<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ username, newPassword }),
     });
   },
 
   async logout(): Promise<void> {
-    await request<{ message: string }>('/auth/logout', {
-      method: 'POST',
-    });
+    removeToken();
   },
 
   async me(): Promise<User> {

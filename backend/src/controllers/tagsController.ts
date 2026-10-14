@@ -1,17 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import pool from '../db';
+import { AuthRequest } from '../middlewares/authMiddleware';
 
-const DEFAULT_USER_ID = 1;
-
-export const getTags = async (req: Request, res: Response) => {
+export const getTags = async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.id;
   try {
-    const result = await pool.query(`
-      SELECT id, name, slug, created_at AS "createdAt"
-      FROM tags
-      WHERE user_id = $1
-      ORDER BY name ASC
-    `, [DEFAULT_USER_ID]);
-
     // Note: The frontend expects 'noteCount' for tags. We could JOIN or just return 0 for now for simplicity, 
     // or calculate it. Let's do a simple subquery.
     const tagsWithCountQuery = `
@@ -21,7 +14,7 @@ export const getTags = async (req: Request, res: Response) => {
       WHERE t.user_id = $1
       ORDER BY t.name ASC
     `;
-    const resultWithCount = await pool.query(tagsWithCountQuery, [DEFAULT_USER_ID]);
+    const resultWithCount = await pool.query(tagsWithCountQuery, [userId]);
 
     res.json({ success: true, data: resultWithCount.rows });
   } catch (error) {
@@ -30,8 +23,9 @@ export const getTags = async (req: Request, res: Response) => {
   }
 };
 
-export const createTag = async (req: Request, res: Response) => {
+export const createTag = async (req: AuthRequest, res: Response) => {
   const { name } = req.body;
+  const userId = req.user!.id;
   if (!name) return res.status(400).json({ success: false, error: { message: 'Name is required' } });
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -41,7 +35,7 @@ export const createTag = async (req: Request, res: Response) => {
       INSERT INTO tags (user_id, name, slug)
       VALUES ($1, $2, $3)
       RETURNING id, name, slug, created_at AS "createdAt"
-    `, [DEFAULT_USER_ID, name, slug]);
+    `, [userId, name, slug]);
 
     res.status(201).json({ success: true, data: { ...result.rows[0], noteCount: 0 } });
   } catch (error) {
@@ -50,9 +44,10 @@ export const createTag = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTag = async (req: Request, res: Response) => {
+export const updateTag = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
+  const userId = req.user!.id;
   
   if (!name) return res.status(400).json({ success: false, error: { message: 'Name is required' } });
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -63,7 +58,7 @@ export const updateTag = async (req: Request, res: Response) => {
       SET name = $1, slug = $2
       WHERE id = $3 AND user_id = $4
       RETURNING id, name, slug, created_at AS "createdAt"
-    `, [name, slug, id, DEFAULT_USER_ID]);
+    `, [name, slug, id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Tag not found' } });
@@ -76,14 +71,15 @@ export const updateTag = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteTag = async (req: Request, res: Response) => {
+export const deleteTag = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       DELETE FROM tags
       WHERE id = $1 AND user_id = $2
       RETURNING id
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Tag not found' } });

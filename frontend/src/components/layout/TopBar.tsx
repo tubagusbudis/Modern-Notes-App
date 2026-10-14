@@ -1,6 +1,8 @@
-import { Menu, Search, Sun, Moon } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Menu, Search, Sun, Moon, LogOut } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useAuth, useLogout } from '../../features/auth/hooks/useAuth';
+import { useTheme } from '../../hooks/useTheme';
 
 interface TopBarProps {
   onOpenSidebar: () => void;
@@ -9,28 +11,25 @@ interface TopBarProps {
 export function TopBar({ onOpenSidebar }: TopBarProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const navigate = useNavigate();
 
-  const [isDark, setIsDark] = useState(false);
+  const { data: user } = useAuth();
+  const logout = useLogout();
+  const { isDark, toggleTheme } = useTheme();
 
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close user menu on outside click
   useEffect(() => {
-    const isDarkStored = localStorage.getItem('theme') === 'dark' || 
-      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    setIsDark(isDarkStored);
-    if (isDarkStored) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    if (next) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -42,7 +41,13 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
     setSearchParams(searchParams, { replace: true });
   };
 
-  const userInitial = 'U';
+  const handleLogout = async () => {
+    setShowUserMenu(false);
+    await logout.mutateAsync();
+    navigate('/login', { replace: true });
+  };
+
+  const userInitial = user?.username?.charAt(0).toUpperCase() || 'U';
 
   return (
     <header className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-surface border-b border-border-soft z-30">
@@ -85,18 +90,36 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
           {isDark ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
         </button>
         
-        {/* User avatar */}
-        <div className="relative">
+        {/* User avatar & dropdown */}
+        <div className="relative" ref={userMenuRef}>
           <button
             type="button"
             className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
-            title="User"
+            title={user?.username || 'User'}
+            onClick={() => setShowUserMenu(!showUserMenu)}
           >
             <span className="sr-only">Open user menu</span>
             <div className="h-8 w-8 rounded-full bg-accent-soft flex items-center justify-center text-accent font-semibold">
               {userInitial}
             </div>
           </button>
+
+          {/* Dropdown menu */}
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-lg border border-border-soft py-1 z-50">
+              <div className="px-4 py-3 border-b border-border-soft/50">
+                <p className="text-sm font-medium text-primary truncate">{user?.username}</p>
+                <p className="text-xs text-muted mt-0.5">Signed in</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-danger/5 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

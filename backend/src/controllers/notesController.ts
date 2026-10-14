@@ -1,11 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import pool from '../db';
+import { AuthRequest } from '../middlewares/authMiddleware';
 
-// Hardcoded default user ID since auth was removed
-const DEFAULT_USER_ID = 1;
-
-export const getNotes = async (req: Request, res: Response) => {
+export const getNotes = async (req: AuthRequest, res: Response) => {
   const { q, filter } = req.query;
+  const userId = req.user!.id;
   
   try {
     let queryText = `
@@ -21,7 +20,7 @@ export const getNotes = async (req: Request, res: Response) => {
       FROM notes 
       WHERE user_id = $1
     `;
-    const values: any[] = [DEFAULT_USER_ID];
+    const values: any[] = [userId];
     let paramIndex = 2;
     
     // Filter logic
@@ -61,8 +60,9 @@ export const getNotes = async (req: Request, res: Response) => {
   }
 };
 
-export const getNote = async (req: Request, res: Response) => {
+export const getNote = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       SELECT id, title, content, preview, tags, 
@@ -76,7 +76,7 @@ export const getNote = async (req: Request, res: Response) => {
              deleted_at AS "deletedAt"
       FROM notes 
       WHERE id = $1 AND user_id = $2
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });
@@ -94,8 +94,9 @@ export const getNote = async (req: Request, res: Response) => {
   }
 };
 
-export const createNote = async (req: Request, res: Response) => {
+export const createNote = async (req: AuthRequest, res: Response) => {
   const { title, content, preview, tags, isPinned, isFavorite, colorVariant } = req.body;
+  const userId = req.user!.id;
   
   let imageUrl = null;
   let fileUrl = null;
@@ -129,7 +130,7 @@ export const createNote = async (req: Request, res: Response) => {
                 updated_at AS "updatedAt", 
                 deleted_at AS "deletedAt"
     `, [
-      DEFAULT_USER_ID,
+      userId,
       title || '',
       content || '',
       preview || '',
@@ -153,9 +154,10 @@ export const createNote = async (req: Request, res: Response) => {
   }
 };
 
-export const updateNote = async (req: Request, res: Response) => {
+export const updateNote = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { title, content, preview, tags, isPinned, isFavorite, colorVariant, removeImage, removeFile } = req.body;
+  const userId = req.user!.id;
   
   let imageUrl: string | null | undefined = undefined;
   let fileUrl: string | null | undefined = undefined;
@@ -185,7 +187,7 @@ export const updateNote = async (req: Request, res: Response) => {
   try {
     // Basic dynamic update query
     const fields = [];
-    const values: any[] = [id, DEFAULT_USER_ID];
+    const values: any[] = [id, userId];
     let paramIndex = 3;
 
     if (title !== undefined) { fields.push(`title = $${paramIndex++}`); values.push(title); }
@@ -237,8 +239,9 @@ export const updateNote = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteNote = async (req: Request, res: Response) => {
+export const deleteNote = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     // Soft delete
     const result = await pool.query(`
@@ -246,7 +249,7 @@ export const deleteNote = async (req: Request, res: Response) => {
       SET deleted_at = CURRENT_TIMESTAMP
       WHERE id = $1 AND user_id = $2
       RETURNING id
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });
@@ -260,15 +263,16 @@ export const deleteNote = async (req: Request, res: Response) => {
   }
 };
 
-export const restoreNote = async (req: Request, res: Response) => {
+export const restoreNote = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       UPDATE notes
       SET deleted_at = NULL
       WHERE id = $1 AND user_id = $2
       RETURNING id
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });
@@ -281,14 +285,15 @@ export const restoreNote = async (req: Request, res: Response) => {
   }
 };
 
-export const permanentDelete = async (req: Request, res: Response) => {
+export const permanentDelete = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       DELETE FROM notes
       WHERE id = $1 AND user_id = $2
       RETURNING id
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });
@@ -301,15 +306,16 @@ export const permanentDelete = async (req: Request, res: Response) => {
   }
 };
 
-export const togglePin = async (req: Request, res: Response) => {
+export const togglePin = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       UPDATE notes
       SET is_pinned = NOT is_pinned
       WHERE id = $1 AND user_id = $2
       RETURNING is_pinned AS "isPinned"
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });
@@ -322,15 +328,16 @@ export const togglePin = async (req: Request, res: Response) => {
   }
 };
 
-export const toggleFavorite = async (req: Request, res: Response) => {
+export const toggleFavorite = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.id;
   try {
     const result = await pool.query(`
       UPDATE notes
       SET is_favorite = NOT is_favorite
       WHERE id = $1 AND user_id = $2
       RETURNING is_favorite AS "isFavorite"
-    `, [id, DEFAULT_USER_ID]);
+    `, [id, userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, error: { message: 'Note not found' } });

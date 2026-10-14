@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApi, type User } from '../../../lib/api';
+import { authApi, getToken, removeToken, type User, type AuthData } from '../../../lib/api';
 
 // ──────────────────────────────────────────────
 // Auth Hooks
@@ -7,16 +7,20 @@ import { authApi, type User } from '../../../lib/api';
 
 /**
  * Query the current authenticated user.
- * Returns null if not authenticated (401).
+ * Only attempts if a JWT token exists in localStorage.
+ * Returns null if not authenticated (401 or no token).
  */
 export function useAuth() {
   return useQuery<User | null>({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
+      const token = getToken();
+      if (!token) return null;
       try {
         return await authApi.me();
       } catch {
-        // 401 means not logged in — return null instead of throwing
+        // 401 means token is invalid/expired — clean up and return null
+        removeToken();
         return null;
       }
     },
@@ -27,7 +31,7 @@ export function useAuth() {
 
 /**
  * Login mutation.
- * On success, invalidates the auth query to refetch user data.
+ * On success, the token is stored by the API client and we refetch user data.
  */
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -35,15 +39,16 @@ export function useLogin() {
   return useMutation({
     mutationFn: ({ username, password }: { username: string; password: string }) =>
       authApi.login(username, password),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    onSuccess: (data: AuthData) => {
+      // Set the user data directly in the cache
+      queryClient.setQueryData(['auth', 'me'], data.user);
     },
   });
 }
 
 /**
  * Register mutation.
- * On success, invalidates the auth query to refetch user data.
+ * On success, the token is stored by the API client and we refetch user data.
  */
 export function useRegister() {
   const queryClient = useQueryClient();
@@ -51,9 +56,20 @@ export function useRegister() {
   return useMutation({
     mutationFn: ({ username, password }: { username: string; password: string }) =>
       authApi.register(username, password),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    onSuccess: (data: AuthData) => {
+      // Set the user data directly in the cache
+      queryClient.setQueryData(['auth', 'me'], data.user);
     },
+  });
+}
+
+/**
+ * Forgot password mutation.
+ */
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: ({ username, newPassword }: { username: string; newPassword: string }) =>
+      authApi.forgotPassword(username, newPassword),
   });
 }
 

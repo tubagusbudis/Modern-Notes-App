@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Edit, MoreVertical, Heart, Pin, Paperclip } from 'lucide-react';
+import { ArrowLeft, Edit, Heart, Pin, Paperclip } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { Skeleton } from '../../../components/ui/Skeleton';
