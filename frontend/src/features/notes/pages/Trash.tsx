@@ -4,12 +4,14 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useNotes, useNoteMutations } from '../hooks/useNotes';
 import { Button } from '../../../components/ui/Button';
-import { cn } from '../../../lib/utils';
+import { cn, stripHtml } from '../../../lib/utils';
 import { usePageEnterAnimation } from '../../../lib/animations';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export function Trash() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const { t } = useLanguage();
   
   const { data: notes, isLoading } = useNotes(query, 'trash');
   const { restore, permanentDelete } = useNoteMutations();
@@ -19,8 +21,10 @@ export function Trash() {
     <div ref={containerRef} className="space-y-6">
       <div className="gsap-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Trash</h1>
-          <p className="text-sm text-secondary mt-1">Deleted notes are kept here before permanent deletion.</p>
+          <h1 className="text-3xl font-black text-black dark:text-white tracking-tight flex items-center gap-2">
+            {t('trashTitle')} <span>🗑️</span>
+          </h1>
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">{t('trashSubtitle')}</p>
         </div>
       </div>
 
@@ -30,9 +34,9 @@ export function Trash() {
         </div>
       ) : notes?.length === 0 ? (
         <EmptyState 
-          icon={<Trash2 />}
-          title="Trash is empty"
-          description="No notes have been deleted."
+          icon={<Trash2 className="stroke-[2.5]" />}
+          title={t('trashEmpty')}
+          description={t('trashEmptyDesc')}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -40,18 +44,18 @@ export function Trash() {
             <div 
               key={note.id}
               className={cn(
-                "gsap-card group relative flex flex-col h-48 p-4 rounded-2xl border transition-all bg-surface border-border-soft hover:shadow-md"
+                "gsap-card group relative flex flex-col min-h-[12rem] p-5 rounded-2xl border-2 border-black bg-white dark:bg-[#1E1E1E] shadow-[4px_4px_0px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] transition-all"
               )}
             >
-              <h3 className="text-base font-semibold text-primary mb-1 line-clamp-1">{note.title}</h3>
-              <p className="text-sm text-secondary leading-relaxed line-clamp-3 flex-1">{note.preview}</p>
+              <h3 className="text-base font-black text-black dark:text-white mb-1.5 line-clamp-1 tracking-tight">{note.title || t('untitledNote')}</h3>
+              <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3 flex-1">{stripHtml(note.preview || note.content) || t('noContentPreview')}</p>
               
-              <div className="mt-4 pt-3 border-t border-border-soft/50 flex justify-between items-center space-x-2">
+              <div className="mt-4 pt-3 border-t-2 border-black/20 flex justify-between items-center space-x-2">
                 <Button variant="outline" size="sm" className="w-full" onClick={() => restore.mutate(note.id)}>
-                  Restore
+                  {t('restore')}
                 </Button>
                 <Button variant="danger" size="sm" className="w-full" onClick={() => permanentDelete.mutate(note.id)}>
-                  Delete
+                  {t('deletePermanently')}
                 </Button>
               </div>
             </div>

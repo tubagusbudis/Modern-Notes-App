@@ -90,3 +90,45 @@ export function useLogout() {
     },
   });
 }
+
+/**
+ * Update username mutation.
+ * On success, updates the authenticated user in React Query cache.
+ */
+export function useUpdateUsername() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (username: string) => authApi.updateUsername(username),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['auth', 'me'], data.user);
+    },
+  });
+}
+
+/**
+ * Update password mutation.
+ */
+export function useUpdatePassword() {
+  return useMutation({
+    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+      authApi.updatePassword(currentPassword, newPassword),
+  });
+}
+
+/**
+ * Delete account mutation.
+ * On success, clears query cache and resets auth state.
+ */
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => authApi.deleteAccount(),
+    onSuccess: () => {
+      queryClient.clear();
+      queryClient.setQueryData(['auth', 'me'], null);
+    },
+  });
+}
+

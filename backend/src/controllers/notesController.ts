@@ -2,6 +2,39 @@ import { Response } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/authMiddleware';
 
+/**
+ * Strips HTML tags, decodes common entities, and collapses whitespace.
+ */
+const stripHtml = (text?: string | null): string => {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/<[^>]*>?/gm, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+/**
+ * Generates a clean plain-text preview from preview or content strings.
+ */
+const generatePreview = (content?: string | null, preview?: string | null, limit: number = 100): string => {
+  const cleanExplicit = stripHtml(preview);
+  if (cleanExplicit) {
+    return cleanExplicit.length > limit ? cleanExplicit.substring(0, limit) + '...' : cleanExplicit;
+  }
+  const cleanContent = stripHtml(content);
+  if (cleanContent) {
+    return cleanContent.length > limit ? cleanContent.substring(0, limit) + '...' : cleanContent;
+  }
+  return '';
+};
+
 export const getNotes = async (req: AuthRequest, res: Response) => {
   const { q, filter } = req.query;
   const userId = req.user!.id;
@@ -47,9 +80,7 @@ export const getNotes = async (req: AuthRequest, res: Response) => {
     const result = await pool.query(queryText, values);
     
     const mappedRows = result.rows.map(row => {
-      if (!row.preview && row.content) {
-        row.preview = row.content.substring(0, 50) + (row.content.length > 50 ? '...' : '');
-      }
+      row.preview = generatePreview(row.content, row.preview);
       return row;
     });
 
@@ -83,9 +114,7 @@ export const getNote = async (req: AuthRequest, res: Response) => {
     }
 
     const note = result.rows[0];
-    if (!note.preview && note.content) {
-      note.preview = note.content.substring(0, 50) + (note.content.length > 50 ? '...' : '');
-    }
+    note.preview = generatePreview(note.content, note.preview);
 
     res.json({ success: true, data: note });
   } catch (error) {
@@ -116,6 +145,8 @@ export const createNote = async (req: AuthRequest, res: Response) => {
     try { parsedTags = JSON.parse(tags); } catch { parsedTags = [tags]; }
   }
 
+  const computedPreview = generatePreview(content, preview);
+
   try {
     const result = await pool.query(`
       INSERT INTO notes (user_id, title, content, preview, tags, is_pinned, is_favorite, color_variant, image_url, file_url)
@@ -133,7 +164,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
       userId,
       title || '',
       content || '',
-      preview || '',
+      computedPreview,
       parsedTags || [],
       isPinned === 'true' || isPinned === true,
       isFavorite === 'true' || isFavorite === true,
@@ -143,9 +174,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
     ]);
 
     const note = result.rows[0];
-    if (!note.preview && note.content) {
-      note.preview = note.content.substring(0, 50) + (note.content.length > 50 ? '...' : '');
-    }
+    note.preview = generatePreview(note.content, note.preview);
 
     res.status(201).json({ success: true, data: note });
   } catch (error) {
@@ -192,7 +221,15 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
 
     if (title !== undefined) { fields.push(`title = $${paramIndex++}`); values.push(title); }
     if (content !== undefined) { fields.push(`content = $${paramIndex++}`); values.push(content); }
-    if (preview !== undefined) { fields.push(`preview = $${paramIndex++}`); values.push(preview); }
+    if (preview !== undefined) {
+      const cleanPreview = generatePreview(content, preview);
+      fields.push(`preview = $${paramIndex++}`);
+      values.push(cleanPreview);
+    } else if (content !== undefined) {
+      const cleanPreview = generatePreview(content);
+      fields.push(`preview = $${paramIndex++}`);
+      values.push(cleanPreview);
+    }
     if (parsedTags !== undefined) { fields.push(`tags = $${paramIndex++}`); values.push(parsedTags); }
     if (isPinned !== undefined) { fields.push(`is_pinned = $${paramIndex++}`); values.push(isPinned === 'true' || isPinned === true); }
     if (isFavorite !== undefined) { fields.push(`is_favorite = $${paramIndex++}`); values.push(isFavorite === 'true' || isFavorite === true); }
@@ -228,9 +265,7 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
     }
 
     const note = result.rows[0];
-    if (!note.preview && note.content) {
-      note.preview = note.content.substring(0, 50) + (note.content.length > 50 ? '...' : '');
-    }
+    note.preview = generatePreview(note.content, note.preview);
 
     res.json({ success: true, data: note });
   } catch (error) {

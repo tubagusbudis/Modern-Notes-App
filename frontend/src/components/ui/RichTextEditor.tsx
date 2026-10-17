@@ -19,6 +19,7 @@ import {
   Quote
 } from 'lucide-react';
 import { useEffect } from 'react';
+import { usePreferences } from '../../hooks/usePreferences';
 
 const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
@@ -26,10 +27,14 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
   }
 
   const toggleBtnClass = (isActive: boolean) => 
-    `p-2 rounded-md transition-colors ${isActive ? 'bg-accent/20 text-accent' : 'text-secondary hover:bg-subtle hover:text-primary'}`;
+    `p-2 rounded-xl border-2 transition-all select-none cursor-pointer ${
+      isActive
+        ? 'bg-[#C4B5FD] text-black border-black shadow-[2px_2px_0px_0px_#000000] font-black translate-x-[0.5px] translate-y-[0.5px]'
+        : 'text-black dark:text-white border-transparent hover:border-black hover:bg-black/5 dark:hover:bg-white/5 font-bold'
+    }`;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 mb-4 border border-border-soft rounded-xl bg-surface sticky top-0 z-10 shadow-sm">
+    <div className="flex flex-wrap items-center gap-1.5 p-2 mb-4 border-2 border-black rounded-2xl bg-white dark:bg-[#1E1E1E] sticky top-0 z-10 shadow-[3px_3px_0px_0px_#000000]">
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -37,7 +42,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('bold'))}
         title="Bold"
       >
-        <Bold className="w-4 h-4" />
+        <Bold className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -46,7 +51,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('italic'))}
         title="Italic"
       >
-        <Italic className="w-4 h-4" />
+        <Italic className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -55,7 +60,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('underline'))}
         title="Underline"
       >
-        <UnderlineIcon className="w-4 h-4" />
+        <UnderlineIcon className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -64,10 +69,10 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('strike'))}
         title="Strikethrough"
       >
-        <Strikethrough className="w-4 h-4" />
+        <Strikethrough className="w-4 h-4 stroke-[2.5]" />
       </button>
       
-      <div className="w-px h-6 bg-border-soft mx-1" />
+      <div className="w-0.5 h-6 bg-black/20 dark:bg-white/20 mx-1 rounded-full" />
       
       <button
         type="button"
@@ -75,7 +80,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('heading', { level: 1 }))}
         title="Heading 1"
       >
-        <Heading1 className="w-4 h-4" />
+        <Heading1 className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -83,10 +88,10 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('heading', { level: 2 }))}
         title="Heading 2"
       >
-        <Heading2 className="w-4 h-4" />
+        <Heading2 className="w-4 h-4 stroke-[2.5]" />
       </button>
       
-      <div className="w-px h-6 bg-border-soft mx-1" />
+      <div className="w-0.5 h-6 bg-black/20 dark:bg-white/20 mx-1 rounded-full" />
       
       <button
         type="button"
@@ -94,7 +99,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('bulletList'))}
         title="Bullet List"
       >
-        <List className="w-4 h-4" />
+        <List className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -102,7 +107,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('orderedList'))}
         title="Numbered List"
       >
-        <ListOrdered className="w-4 h-4" />
+        <ListOrdered className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -110,10 +115,10 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('taskList'))}
         title="To-Do List"
       >
-        <CheckSquare className="w-4 h-4" />
+        <CheckSquare className="w-4 h-4 stroke-[2.5]" />
       </button>
       
-      <div className="w-px h-6 bg-border-soft mx-1" />
+      <div className="w-0.5 h-6 bg-black/20 dark:bg-white/20 mx-1 rounded-full" />
       
       <button
         type="button"
@@ -121,7 +126,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('highlight'))}
         title="Highlight"
       >
-        <Highlighter className="w-4 h-4" />
+        <Highlighter className="w-4 h-4 stroke-[2.5]" />
       </button>
       <button
         type="button"
@@ -129,7 +134,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         className={toggleBtnClass(editor.isActive('blockquote'))}
         title="Blockquote"
       >
-        <Quote className="w-4 h-4" />
+        <Quote className="w-4 h-4 stroke-[2.5]" />
       </button>
     </div>
   );
@@ -142,6 +147,8 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+  const { fontSizeClass, proseSizeClass } = usePreferences();
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -158,13 +165,26 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base dark:prose-invert focus:outline-none max-w-none min-h-[500px] text-gray-900 dark:text-gray-100',
+        class: `prose ${proseSizeClass} ${fontSizeClass} dark:prose-invert focus:outline-none max-w-none min-h-[400px] text-gray-900 dark:text-gray-100`,
       },
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
   });
+
+  // Update dynamic font size attributes if preference changes
+  useEffect(() => {
+    if (editor) {
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            class: `prose ${proseSizeClass} ${fontSizeClass} dark:prose-invert focus:outline-none max-w-none min-h-[400px] text-gray-900 dark:text-gray-100`,
+          },
+        },
+      });
+    }
+  }, [editor, fontSizeClass, proseSizeClass]);
 
   // Update editor content when content prop changes (for initial load)
   useEffect(() => {
@@ -176,8 +196,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
   return (
     <div className="flex flex-col w-full flex-1">
       <MenuBar editor={editor} />
-      <div className="flex-1 w-full rich-text-editor text-gray-900 dark:text-gray-100">
-        <EditorContent editor={editor} className="flex-1 w-full" />
+      <div className={`flex-1 w-full rich-text-editor p-5 sm:p-6 rounded-2xl border-2 border-black bg-white dark:bg-[#1E1E1E] shadow-[4px_4px_0px_0px_#000000] text-gray-900 dark:text-gray-100 ${fontSizeClass}`}>
+        <EditorContent editor={editor} className={`flex-1 w-full ${fontSizeClass}`} />
       </div>
     </div>
   );

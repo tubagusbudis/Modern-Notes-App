@@ -20,7 +20,7 @@ export function Toast({ variant = "default", title, description, onClose, classN
   return (
     <div
       className={cn(
-        "pointer-events-auto flex w-full max-w-sm items-start gap-4 rounded-xl border border-border-soft bg-surface p-4 shadow-lg transition-all",
+        "pointer-events-auto flex w-full max-w-sm items-start gap-3.5 rounded-2xl border-2 border-black bg-white dark:bg-[#1E1E1E] p-4 shadow-[4px_4px_0px_0px_#000000] transition-all",
         className
       )}
       {...props}
@@ -29,17 +29,17 @@ export function Toast({ variant = "default", title, description, onClose, classN
         {icons[variant]}
       </div>
       <div className="flex-1 space-y-1">
-        <p className="text-sm font-semibold text-primary">{title}</p>
+        <p className="text-sm font-black text-black dark:text-white">{title}</p>
         {description && (
-          <p className="text-sm text-secondary leading-relaxed">{description}</p>
+          <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 leading-relaxed">{description}</p>
         )}
       </div>
       {onClose && (
         <button
           onClick={onClose}
-          className="shrink-0 rounded-md p-1 text-muted hover:bg-subtle hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
+          className="shrink-0 rounded-lg p-1 text-black dark:text-white border-2 border-transparent hover:border-black hover:bg-black/5 transition-all cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4 stroke-[2.5]" />
         </button>
       )}
     </div>

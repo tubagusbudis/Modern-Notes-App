@@ -5,11 +5,13 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useNotes, useNoteMutations } from '../hooks/useNotes';
 import { usePageEnterAnimation } from '../../../lib/animations';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export function FavoriteNotes() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const { t } = useLanguage();
   
   const { data: notes, isLoading } = useNotes(query, 'favorites');
   const { remove } = useNoteMutations();
@@ -19,9 +21,11 @@ export function FavoriteNotes() {
     <div ref={containerRef} className="space-y-6">
       <div className="gsap-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Favorite Notes</h1>
-          <p className="text-sm text-secondary mt-1">
-            Notes you marked for quick access.
+          <h1 className="text-3xl font-black text-black dark:text-white tracking-tight flex items-center gap-2">
+            {t('favoriteNotesTitle')} <span>💖</span>
+          </h1>
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">
+            {t('favoriteNotesSubtitle')}
           </p>
         </div>
       </div>
@@ -35,11 +39,11 @@ export function FavoriteNotes() {
       ) : notes?.length === 0 ? (
         <EmptyState
           icon={query ? <SearchX /> : <Heart />}
-          title={query ? "No results found" : "No favorite notes"}
+          title={query ? t('noResultsFound') : t('noFavoriteNotes')}
           description={
             query
-              ? `We couldn't find anything matching "${query}".`
-              : "Favorite a note to keep it handy here."
+              ? t('noResultsDesc', { query })
+              : t('noFavoriteDesc')
           }
         />
       ) : (

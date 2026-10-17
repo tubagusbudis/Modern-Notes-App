@@ -1,8 +1,9 @@
-import { Menu, Search, Sun, Moon, LogOut } from 'lucide-react';
+import { Menu, Search, LogOut } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth, useLogout } from '../../features/auth/hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
+import { useLanguage } from '../../context/LanguageContext';
+import { LanguageToggle } from '../ui/LanguageToggle';
 
 interface TopBarProps {
   onOpenSidebar: () => void;
@@ -15,7 +16,7 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
 
   const { data: user } = useAuth();
   const logout = useLogout();
-  const { isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -50,30 +51,30 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
   const userInitial = user?.username?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <header className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-surface border-b border-border-soft z-30">
+    <header className="h-16 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-[#1E1E1E] border-b-2 border-black z-30 relative">
       <div className="flex items-center flex-1">
         <button
           type="button"
-          className="md:hidden p-2 -ml-2 mr-2 text-secondary hover:text-primary hover:bg-subtle rounded-md"
+          className="md:hidden p-2 -ml-1 mr-2 text-black dark:text-white bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 transition-all"
           onClick={onOpenSidebar}
         >
-          <span className="sr-only">Open sidebar</span>
-          <Menu className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">{t('openSidebar')}</span>
+          <Menu className="h-5 w-5 stroke-[2.5]" aria-hidden="true" />
         </button>
 
         <div className="max-w-md w-full relative group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-muted group-focus-within:text-accent transition-colors" aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-black dark:text-white stroke-[2.5]" aria-hidden="true" />
           </div>
           <input
             type="text"
             value={query}
             onChange={handleSearch}
-            className="block w-full pl-9 pr-14 py-2 border border-transparent rounded-lg leading-5 bg-subtle text-primary placeholder-muted focus:outline-none focus:bg-surface focus:border-border-soft focus:ring-1 focus:ring-accent transition-all sm:text-sm"
-            placeholder="Search notes or type a command..."
+            className="block w-full pl-10 pr-20 py-2 border-2 border-black rounded-xl bg-white dark:bg-[#1E1E1E] text-black dark:text-white font-bold placeholder-gray-500 shadow-[2px_2px_0px_0px_#000] focus:shadow-[3px_3px_0px_0px_#000] focus:outline-none transition-all sm:text-sm"
+            placeholder={t('searchPlaceholder')}
           />
-          <div className="absolute inset-y-0 right-0 pr-2 flex items-center">
-            <kbd className="hidden sm:inline-flex items-center border border-border-soft rounded px-2 text-xs font-sans font-medium text-muted">
+          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+            <kbd className="hidden sm:inline-flex items-center border-2 border-black bg-[#FAF4EB] dark:bg-[#181818] rounded-md px-1.5 py-0.5 text-[10px] font-black text-black dark:text-white shadow-[1px_1px_0px_0px_#000]">
               Ctrl K
             </kbd>
           </div>
@@ -81,42 +82,34 @@ export function TopBar({ onOpenSidebar }: TopBarProps) {
       </div>
 
       <div className="ml-4 flex items-center md:ml-6 space-x-3">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2 text-secondary hover:text-primary hover:bg-subtle rounded-full transition-colors"
-        >
-          <span className="sr-only">Toggle theme</span>
-          {isDark ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
-        </button>
+        {/* Language Switcher */}
+        <LanguageToggle id="theme-toggle-btn" />
         
-        {/* User avatar & dropdown */}
+        {/* User Avatar & Dropdown */}
         <div className="relative" ref={userMenuRef}>
           <button
             type="button"
-            className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            className="w-10 h-10 rounded-xl bg-[#C4B5FD] border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center justify-center text-black font-black text-sm select-none transition-all cursor-pointer"
             title={user?.username || 'User'}
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            <span className="sr-only">Open user menu</span>
-            <div className="h-8 w-8 rounded-full bg-accent-soft flex items-center justify-center text-accent font-semibold">
-              {userInitial}
-            </div>
+            <span className="sr-only">{t('openUserMenu')}</span>
+            {userInitial}
           </button>
 
-          {/* Dropdown menu */}
+          {/* Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-lg border border-border-soft py-1 z-50">
-              <div className="px-4 py-3 border-b border-border-soft/50">
-                <p className="text-sm font-medium text-primary truncate">{user?.username}</p>
-                <p className="text-xs text-muted mt-0.5">Signed in</p>
+            <div className="absolute right-0 mt-2.5 w-56 bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-[4px_4px_0px_0px_#000] border-2 border-black py-2 z-50">
+              <div className="px-4 py-2 border-b-2 border-black/10">
+                <p className="text-sm font-black text-black dark:text-white truncate">{user?.username}</p>
+                <p className="text-xs font-semibold text-gray-500 mt-0.5">{t('signedIn')}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-danger/5 transition-colors"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-extrabold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
               >
-                <LogOut className="w-4 h-4" />
-                Sign out
+                <LogOut className="w-4 h-4 stroke-[2.5]" />
+                {t('signOut')}
               </button>
             </div>
           )}

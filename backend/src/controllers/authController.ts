@@ -214,3 +214,193 @@ export const me = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * PUT /api/auth/username
+ * Body: { username }
+ * Protected: Updates user's username if not duplicate.
+ */
+export const updateUsername = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' },
+    });
+  }
+
+  const { username } = req.body;
+  if (!username || typeof username !== 'string' || !username.trim()) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Valid username is required.' },
+    });
+  }
+
+  const trimmedUsername = username.trim();
+
+  try {
+    // Check if new username is already taken by another user
+    const existing = await pool.query(
+      'SELECT id FROM users WHERE username = $1 AND id != $2',
+      [trimmedUsername, userId]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'DUPLICATE_USERNAME', message: 'Username is already taken.' },
+      });
+    }
+
+    // Update username
+    const result = await pool.query(
+      'UPDATE users SET username = $1 WHERE id = $2 RETURNING id, username, created_at AS "createdAt"',
+      [trimmedUsername, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found.' },
+      });
+    }
+
+    const updatedUser = result.rows[0];
+
+    // Issue updated token with new username
+    const token = jwt.sign({ id: updatedUser.id, username: updatedUser.username }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    res.json({
+      success: true,
+      data: {
+        user: updatedUser,
+        token,
+        message: 'Username updated successfully.',
+      },
+    });
+  } catch (error) {
+    console.error('Error in updateUsername:', error);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'Internal server error.' },
+    });
+  }
+};
+
+/**
+ * PUT /api/auth/password
+ * Body: { currentPassword, newPassword }
+ * Protected: Verifies current password and updates to new hashed password.
+ */
+export const updatePassword = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' },
+    });
+  }
+
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Current password and new password are required.' },
+    });
+  }
+
+  if (typeof newPassword !== 'string' || newPassword.length < 6) {
+    return res.status(400).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'New password must be at least 6 characters.' },
+    });
+  }
+
+  try {
+    const result = await pool.query('SELECT id, password FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found.' },
+      });
+    }
+
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_PASSWORD', message: 'Current password does not match.' },
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+
+    res.json({
+      success: true,
+      data: { message: 'Password updated successfully.' },
+    });
+  } catch (error) {
+    console.error('Error in updatePassword:', error);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'Internal server error.' },
+    });
+  }
+};
+
+/**
+ * DELETE /api/auth/account
+ * Protected: Deletes all notes (and tags) belonging to user_id, then deletes user.
+ */
+export const deleteAccount = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' },
+    });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Delete user's notes
+    await client.query('DELETE FROM notes WHERE user_id = $1', [userId]);
+
+    // Delete user's tags
+    await client.query('DELETE FROM tags WHERE user_id = $1', [userId]);
+
+    // Delete user
+    const deleteResult = await client.query('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
+    if (deleteResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found.' },
+      });
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      data: { message: 'Account deleted successfully.' },
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error in deleteAccount:', error);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'Internal server error.' },
+    });
+  } finally {
+    client.release();
+  }
+};
+

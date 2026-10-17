@@ -1,3 +1,5 @@
+import { stripHtml } from './utils';
+
 export interface Note {
   id: string;
   title: string;
@@ -83,7 +85,7 @@ export const mockApi = {
       id: Math.random().toString(36).substr(2, 9),
       title: data.title || 'Untitled Note',
       content: data.content || '',
-      preview: (data.content || '').substring(0, 100),
+      preview: data.preview ? stripHtml(data.preview) : (data.content ? stripHtml(data.content).substring(0, 100) : ''),
       tags: data.tags || [],
       isPinned: !!data.isPinned,
       isFavorite: !!data.isFavorite,
@@ -104,7 +106,7 @@ export const mockApi = {
     notesData[index] = { 
       ...notesData[index], 
       ...data, 
-      preview: data.content ? data.content.substring(0, 100) : notesData[index].preview,
+      preview: data.preview ? stripHtml(data.preview) : (data.content ? stripHtml(data.content).substring(0, 100) : notesData[index].preview),
       updatedAt: new Date().toISOString() 
     };
     return notesData[index];

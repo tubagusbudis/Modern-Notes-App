@@ -1,10 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-app: var(--bg-app);
+  --color-outer: var(--bg-outer);
   --color-surface: var(--bg-surface);
+  --color-sidebar: var(--bg-sidebar);
   --color-subtle: var(--bg-subtle);
   
   --color-primary: var(--text-primary);
@@ -12,9 +16,20 @@
   --color-muted: var(--text-muted);
   
   --color-border-soft: var(--border-soft);
+  --color-border-brutal: var(--border-brutal);
   
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  
+  /* Neo-brutalism vibrant brand colors */
+  --color-coral: #FF7890;
+  --color-coral-hover: #FF617D;
+  --color-lavender: #C4B5FD;
+  --color-lavender-hover: #B5A1FC;
+  --color-yellow: #FFE066;
+  --color-mint: #A3F7CF;
+  --color-blue: #B4E4FF;
+  --color-pink: #FFC6D0;
   
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -25,48 +40,118 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
+  --radius-3xl: 32px;
   --radius-full: 9999px;
 
-  --font-inter: "Inter", sans-serif;
+  --font-inter: "Plus Jakarta Sans", "Inter", sans-serif;
 }
 
 @layer base {
   :root {
-    --bg-app: #F6F7FB;
+    --bg-outer: #FAF4EB;
+    --bg-app: #FAF4EB;
     --bg-surface: #FFFFFF;
-    --bg-subtle: #F0F2F7;
-    --text-primary: #171922;
-    --text-secondary: #667085;
-    --text-muted: #98A2B3;
-    --border-soft: #E7EAF0;
-    --accent: #6C63FF;
-    --accent-soft: #EEECFF;
-    --success: #34B27B;
-    --warning: #F2B84B;
-    --danger: #E85D75;
+    --bg-sidebar: #F8F5EE;
+    --bg-subtle: #F2ECE1;
+    --text-primary: #111111;
+    --text-secondary: #4A4A4A;
+    --text-muted: #737373;
+    --border-soft: #000000;
+    --border-brutal: #000000;
+    --accent: #FF7890;
+    --accent-soft: #C4B5FD;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
   }
 
-
-
   .dark {
-    --bg-app: #101218;
-    --bg-surface: #181B24;
-    --bg-subtle: #20242F;
-    --text-primary: #F5F7FA;
-    --text-secondary: #AAB2C0;
-    --text-muted: #727B8D;
-    --border-soft: #2B3040;
-    --accent: #8A82FF;
-    --accent-soft: #25233F;
+    --bg-outer: #121212;
+    --bg-app: #121212;
+    --bg-surface: #1E1E1E;
+    --bg-sidebar: #181818;
+    --bg-subtle: #2A2A2A;
+    --text-primary: #F3F4F6;
+    --text-secondary: #D4D4D4;
+    --text-muted: #A3A3A3;
+    --border-soft: #383838;
+    --border-brutal: #000000;
+    --accent: #FF7890;
+    --accent-soft: #8B5CF6;
+    --success: #34D399;
+    --warning: #FBBF24;
+    --danger: #F87171;
   }
 
   body {
-    background-color: var(--bg-app);
+    background-color: var(--bg-outer);
     color: var(--text-primary);
     font-family: var(--font-inter);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+}
+
+/* Hard Offset Shadows (Neo-Brutalism) */
+.shadow-brutal-sm {
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.shadow-brutal {
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.shadow-brutal-md {
+  box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.shadow-brutal-lg {
+  box-shadow: 6px 6px 0px 0px #000000;
+}
+
+.shadow-brutal-xl {
+  box-shadow: 8px 8px 0px 0px #000000;
+}
+
+/* Interactive Brutalist Button Utility */
+.brutal-btn-coral {
+  background-color: #FF7890;
+  color: #111111;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
+  font-weight: 800;
+  transition: all 0.15s ease-in-out;
+}
+
+.brutal-btn-coral:hover {
+  background-color: #FF617D;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.brutal-btn-coral:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px #000000;
+}
+
+.brutal-btn-lavender {
+  background-color: #C4B5FD;
+  color: #111111;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
+  font-weight: 800;
+  transition: all 0.15s ease-in-out;
+}
+
+.brutal-btn-lavender:hover {
+  background-color: #B5A1FC;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.brutal-btn-lavender:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px #000000;
 }
 
 /* TipTap Editor & Prose Overrides */

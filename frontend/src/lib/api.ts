@@ -166,6 +166,32 @@ export const authApi = {
   async me(): Promise<User> {
     return request<User>('/auth/me');
   },
+
+  async updateUsername(username: string): Promise<{ user: User; token: string; message: string }> {
+    const data = await request<{ user: User; token: string; message: string }>('/auth/username', {
+      method: 'PUT',
+      body: JSON.stringify({ username }),
+    });
+    if (data.token) {
+      setToken(data.token);
+    }
+    return data;
+  },
+
+  async updatePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    return request<{ message: string }>('/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  async deleteAccount(): Promise<{ message: string }> {
+    const res = await request<{ message: string }>('/auth/account', {
+      method: 'DELETE',
+    });
+    removeToken();
+    return res;
+  },
 };
 
 // ──────────────────────────────────────────────

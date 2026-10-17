@@ -4,6 +4,8 @@ import { ArrowLeft, Check, Trash2, X, Image as ImageIcon, Paperclip } from 'luci
 import { useNote, useNoteMutations } from '../hooks/useNotes';
 import { usePageEnterAnimation } from '../../../lib/animations';
 import { RichTextEditor } from '../../../components/ui/RichTextEditor';
+import { usePreferences } from '../../../hooks/usePreferences';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export function NoteEditor() {
   const navigate = useNavigate();
@@ -11,11 +13,15 @@ export function NoteEditor() {
   const isNew = !id;
   const { data: note, isLoading } = useNote(id);
   const { create, update, remove } = useNoteMutations();
+  const { preferences } = usePreferences();
+  const { t } = useLanguage();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
-  const [colorVariant, setColorVariant] = useState<"default" | "lavender" | "mint" | "sky-blue" | "sage-green" | "warm-amber" | "soft-rose" | "coral" | "lilac" | "slate-gray">('default');
+  const [colorVariant, setColorVariant] = useState<"default" | "lavender" | "mint" | "sky-blue" | "sage-green" | "warm-amber" | "soft-rose" | "coral" | "lilac" | "slate-gray">(
+    isNew ? (preferences.defaultColor as any) : 'default'
+  );
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
@@ -40,8 +46,12 @@ export function NoteEditor() {
       setTags(note.tags || []);
       setColorVariant(note.colorVariant as any);
       initialLoadRef.current = false;
+    } else if (isNew && initialLoadRef.current) {
+      setColorVariant(preferences.defaultColor as any);
+      initialLoadRef.current = false;
     }
-  }, [note]);
+  }, [note, isNew, preferences.defaultColor]);
+
 
   const handleSave = async () => {
     setSaveStatus('saving');
@@ -117,44 +127,56 @@ export function NoteEditor() {
 
   return (
     <div ref={containerRef} className="max-w-4xl mx-auto flex flex-col h-full h-[calc(100vh-8rem)]">
-      <header className="gsap-header flex items-center justify-between pb-4 border-b border-border-soft mb-6">
-        <div className="flex items-center space-x-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-secondary hover:text-primary hover:bg-subtle rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+      <header className="gsap-header flex flex-wrap items-center justify-between pb-4 border-b-2 border-black/20 gap-3 mb-6">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-black dark:text-white bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+            title={t('goBack')}
+          >
+            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
-          <span className="text-sm font-medium text-muted">{isNew ? 'Untitled note' : 'Editing note'}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-muted mr-2 flex items-center">
-            {saveStatus === 'saved' && <><Check className="w-3 h-3 mr-1" /> Saved</>}
-            {saveStatus === 'saving' && 'Saving...'}
-            {saveStatus === 'unsaved' && 'Unsaved changes'}
+          <span className="text-sm font-extrabold text-gray-700 dark:text-gray-300">
+            {isNew ? t('untitledNoteEditor') : t('editingNote')}
           </span>
-          <div className="flex items-center space-x-1 mr-4">
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="px-3 py-1 rounded-xl border-2 border-black bg-white dark:bg-[#1E1E1E] text-xs font-black text-black dark:text-white shadow-[1.5px_1.5px_0px_0px_#000] flex items-center">
+            {saveStatus === 'saved' && <><Check className="w-3.5 h-3.5 mr-1 stroke-[3] text-emerald-600" /> {t('saved')}</>}
+            {saveStatus === 'saving' && t('saving')}
+            {saveStatus === 'unsaved' && t('unsavedChanges')}
+          </span>
+
+          <div className="flex items-center space-x-1.5 px-2 py-1 bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000]">
             {[
-              { id: 'default', color: 'bg-surface border-border-soft', name: 'Default' },
-              { id: 'lavender', color: 'bg-[#EAE4FA] border-[#EAE4FA]', name: 'Lavender' },
-              { id: 'mint', color: 'bg-[#E0F4E8] border-[#E0F4E8]', name: 'Mint' },
-              { id: 'sky-blue', color: 'bg-[#E3F2FD] border-[#E3F2FD]', name: 'Sky Blue' },
-              { id: 'sage-green', color: 'bg-[#E4ECE5] border-[#E4ECE5]', name: 'Sage Green' },
-              { id: 'warm-amber', color: 'bg-[#FFF3E0] border-[#FFF3E0]', name: 'Warm Amber' },
-              { id: 'soft-rose', color: 'bg-[#FCE4EC] border-[#FCE4EC]', name: 'Soft Rose' },
-              { id: 'coral', color: 'bg-[#FFEBEE] border-[#FFEBEE]', name: 'Coral' },
-              { id: 'lilac', color: 'bg-[#F3E5F5] border-[#F3E5F5]', name: 'Lilac' },
-              { id: 'slate-gray', color: 'bg-[#ECEFF1] border-[#ECEFF1]', name: 'Slate Gray' },
+              { id: 'default', color: 'bg-white', name: t('colorWhite') },
+              { id: 'lavender', color: 'bg-[#E2D4FF]', name: t('colorLavender') },
+              { id: 'mint', color: 'bg-[#A3F7CF]', name: t('colorMint') },
+              { id: 'sky-blue', color: 'bg-[#B4E4FF]', name: t('colorBlue') },
+              { id: 'sage-green', color: 'bg-[#CBE8BA]', name: 'Sage Green' },
+              { id: 'warm-amber', color: 'bg-[#FFEB85]', name: t('colorYellow') },
+              { id: 'soft-rose', color: 'bg-[#FFC6D0]', name: t('colorPink') },
+              { id: 'coral', color: 'bg-[#FFB5A7]', name: 'Coral' },
+              { id: 'lilac', color: 'bg-[#E8D1FF]', name: 'Lilac' },
+              { id: 'slate-gray', color: 'bg-[#DFE4EA]', name: 'Slate Gray' },
             ].map(swatch => (
               <button
                 key={swatch.id}
                 onClick={() => setColorVariant(swatch.id as any)}
-                className={`w-5 h-5 rounded-full border transition-transform ${swatch.color} ${colorVariant === swatch.id ? 'ring-2 ring-primary ring-offset-1 scale-110' : 'hover:scale-110'}`}
+                className={`w-5 h-5 rounded-full border-2 border-black transition-all cursor-pointer ${swatch.color} ${colorVariant === swatch.id ? 'scale-125 ring-2 ring-black shadow-[1.5px_1.5px_0px_0px_#000]' : 'hover:scale-115'}`}
                 title={swatch.name}
               />
             ))}
           </div>
 
-          <div className="flex items-center space-x-1 mr-4 border-l pl-4 border-border-soft">
-            <button onClick={() => imageInputRef.current?.click()} className="p-2 text-secondary hover:text-primary transition-colors" title="Attach Image">
-              <ImageIcon className="w-4 h-4" />
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => imageInputRef.current?.click()}
+              className="p-2 text-black dark:text-white bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+              title={t('attachImage')}
+            >
+              <ImageIcon className="w-4.5 h-4.5 stroke-[2.2]" />
             </button>
             <input type="file" accept="image/*" className="hidden" ref={imageInputRef} onChange={(e) => {
               const file = e.target.files?.[0] || null;
@@ -163,8 +185,12 @@ export function NoteEditor() {
               if (file) setRemoveImage(false);
             }} />
             
-            <button onClick={() => fileInputRef.current?.click()} className="p-2 text-secondary hover:text-primary transition-colors" title="Attach File">
-              <Paperclip className="w-4 h-4" />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 text-black dark:text-white bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+              title={t('attachFile')}
+            >
+              <Paperclip className="w-4.5 h-4.5 stroke-[2.2]" />
             </button>
             <input type="file" className="hidden" ref={fileInputRef} onChange={(e) => {
               const file = e.target.files?.[0] || null;
@@ -172,13 +198,17 @@ export function NoteEditor() {
               setDocFile(file);
               if (file) setRemoveFile(false);
             }} />
-          </div>
 
-          {!isNew && (
-            <button onClick={handleDelete} className="p-2 text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors">
-              <Trash2 className="w-5 h-5" />
-            </button>
-          )}
+            {!isNew && (
+              <button
+                onClick={handleDelete}
+                className="p-2 text-black bg-[#FF7890] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                title={t('moveToTrash')}
+              >
+                <Trash2 className="w-4.5 h-4.5 stroke-[2.2]" />
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -187,16 +217,24 @@ export function NoteEditor() {
           type="text" 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add title..." 
-          className="w-full text-4xl font-bold bg-transparent border-none outline-none text-primary placeholder-muted mb-4"
+          placeholder={t('noteTitlePlaceholder')} 
+          className="w-full text-3xl sm:text-4xl font-black bg-transparent border-none outline-none text-black dark:text-white placeholder-gray-400 mb-4 tracking-tight"
         />
-        <div className="flex items-center flex-wrap gap-2 mb-8 text-sm">
-          <span className="text-muted">Tags:</span>
+        
+        {/* Tags */}
+        <div className="flex items-center flex-wrap gap-2 mb-6 text-sm">
+          <span className="text-xs font-black uppercase tracking-wider text-gray-500">{t('tagsLabel')}</span>
           {tags.map(tag => (
-            <span key={tag} className="flex items-center px-2 py-1 bg-subtle text-secondary rounded-md">
+            <span
+              key={tag}
+              className="flex items-center px-3 py-1 bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl text-xs font-black text-black dark:text-white shadow-[1.5px_1.5px_0px_0px_#000]"
+            >
               {tag}
-              <button onClick={() => setTags(tags.filter(t => t !== tag))} className="ml-1 hover:text-danger rounded-full p-0.5">
-                <X className="w-3 h-3" />
+              <button
+                onClick={() => setTags(tags.filter(t => t !== tag))}
+                className="ml-1.5 hover:text-red-600 rounded-full p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5 stroke-[3]" />
               </button>
             </span>
           ))}
@@ -208,41 +246,53 @@ export function NoteEditor() {
               onChange={e => setNewTag(e.target.value)}
               onKeyDown={handleAddTag}
               onBlur={handleAddTag}
-              placeholder="Type tag..."
-              className="px-2 py-1 bg-transparent border-b border-primary outline-none text-primary w-24 text-sm"
+              placeholder={t('typeTag')}
+              className="px-3 py-1 bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-xl text-xs font-black text-black dark:text-white shadow-[1.5px_1.5px_0px_0px_#000] outline-none w-28"
             />
           ) : (
-            <button onClick={() => setIsAddingTag(true)} className="px-2 py-1 bg-subtle text-secondary hover:text-primary rounded-md transition-colors">+ Add tag</button>
+            <button
+              onClick={() => setIsAddingTag(true)}
+              className="px-3 py-1 bg-[#C4B5FD] text-black border-2 border-black rounded-xl text-xs font-black shadow-[1.5px_1.5px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] transition-all cursor-pointer"
+            >
+              {t('addTag')}
+            </button>
           )}
         </div>
 
+        {/* Attached Image Preview */}
         {(imageFile || (note?.imageUrl && !removeImage)) && (
-          <div className="mb-4 relative w-max">
-             <img src={imageFile ? URL.createObjectURL(imageFile) : `http://localhost:5000${note?.imageUrl}`} alt="Attachment" className="max-h-[400px] rounded-xl object-contain border border-border-soft bg-black/5" />
-             <button
-               onClick={(e) => {
-                 e.preventDefault();
-                 setImageFile(null);
-                 pendingImageRef.current = null;
-                 setRemoveImage(true);
-               }}
-               className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-danger text-white rounded-full transition-colors backdrop-blur-sm"
-               title="Remove image"
-             >
-               <X className="w-4 h-4" />
-             </button>
+          <div className="mb-5 relative w-max max-w-full">
+            <img
+              src={imageFile ? URL.createObjectURL(imageFile) : `http://localhost:5000${note?.imageUrl}`}
+              alt="Attachment"
+              className="max-h-[380px] rounded-2xl object-contain border-3 border-black shadow-[4px_4px_0px_0px_#000] bg-white dark:bg-[#1E1E1E]"
+            />
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setImageFile(null);
+                pendingImageRef.current = null;
+                setRemoveImage(true);
+              }}
+              className="absolute top-2.5 right-2.5 p-1.5 bg-[#FF7890] hover:bg-[#FF617D] text-black border-2 border-black rounded-full shadow-[2px_2px_0px_0px_#000] hover:scale-110 transition-all cursor-pointer"
+              title={t('removeImage')}
+            >
+              <X className="w-4 h-4 stroke-[3]" />
+            </button>
           </div>
         )}
+
+        {/* Attached Document File */}
         {(docFile || (note?.fileUrl && !removeFile)) && (
-          <div className="mb-4 flex items-center space-x-2">
+          <div className="mb-5 flex items-center space-x-2">
             <a 
               href={docFile ? URL.createObjectURL(docFile) : `http://localhost:5000${note?.fileUrl}`} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="flex items-center space-x-2 text-sm text-secondary bg-subtle p-3 rounded-lg w-max border border-border-soft hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary transition-colors cursor-pointer"
+              className="flex items-center space-x-2 text-sm font-extrabold text-black dark:text-white bg-white dark:bg-[#1E1E1E] p-3 rounded-xl border-2 border-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#000] transition-all cursor-pointer w-max max-w-full"
             >
-               <Paperclip className="w-4 h-4" />
-               <span>{docFile ? docFile.name : note?.fileUrl?.split('/').pop()}</span>
+              <Paperclip className="w-4.5 h-4.5 stroke-[2.5]" />
+              <span>{docFile ? docFile.name : note?.fileUrl?.split('/').pop()}</span>
             </a>
             <button
               onClick={(e) => {
@@ -251,10 +301,10 @@ export function NoteEditor() {
                 pendingDocRef.current = null;
                 setRemoveFile(true);
               }}
-              className="p-2 text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-              title="Remove file"
+              className="p-3 text-black bg-[#FF7890] border-2 border-black rounded-xl shadow-[2px_2px_0px_0px_#000] hover:scale-105 transition-all cursor-pointer"
+              title={t('removeFile')}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 stroke-[2.5]" />
             </button>
           </div>
         )}
@@ -262,7 +312,7 @@ export function NoteEditor() {
         <RichTextEditor 
           content={content}
           onChange={setContent}
-          placeholder="Start writing..." 
+          placeholder={t('startWriting')} 
         />
       </div>
     </div>

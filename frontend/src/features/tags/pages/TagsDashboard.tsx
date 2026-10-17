@@ -4,10 +4,12 @@ import { Skeleton } from '../../../components/ui/Skeleton';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { useNavigate } from 'react-router-dom';
 import { usePageEnterAnimation } from '../../../lib/animations';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export function TagsDashboard() {
   const { data: notes, isLoading } = useNotes();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const containerRef = usePageEnterAnimation(isLoading);
 
   if (isLoading) {
@@ -37,16 +39,18 @@ export function TagsDashboard() {
     <div ref={containerRef} className="space-y-6">
       <div className="gsap-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Tags</h1>
-          <p className="text-sm text-secondary mt-1">Browse notes by their tags.</p>
+          <h1 className="text-3xl font-black text-black dark:text-white tracking-tight flex items-center gap-2">
+            {t('tagsTitle')} <span>🏷️</span>
+          </h1>
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">{t('tagsSubtitle')}</p>
         </div>
       </div>
 
       {uniqueTags.length === 0 ? (
         <EmptyState 
-          icon={<SearchX />}
-          title="No tags found"
-          description="You haven't tagged any notes yet."
+          icon={<SearchX className="stroke-[2.5]" />}
+          title={t('noTagsFound')}
+          description={t('noTagsDesc')}
         />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -54,13 +58,13 @@ export function TagsDashboard() {
             <div 
               key={tag}
               onClick={() => navigate(`/app/notes?q=${tag}`)}
-              className="gsap-card group flex items-center justify-between p-4 bg-surface border border-border-soft rounded-xl cursor-pointer hover:shadow-md hover:border-accent/30 transition-all"
+              className="gsap-card group flex items-center justify-between p-4 bg-white dark:bg-[#1E1E1E] border-2 border-black rounded-2xl cursor-pointer shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#000000] transition-all select-none"
             >
-              <div className="flex items-center space-x-3 overflow-hidden">
-                <Tag className="w-5 h-5 text-accent opacity-70 group-hover:opacity-100 transition-opacity" />
-                <span className="font-medium text-primary truncate">{tag}</span>
+              <div className="flex items-center space-x-2.5 overflow-hidden">
+                <Tag className="w-4.5 h-4.5 text-black stroke-[2.2] dark:text-white" />
+                <span className="font-extrabold text-black dark:text-white truncate">{tag}</span>
               </div>
-              <span className="text-xs font-semibold text-secondary bg-subtle px-2 py-1 rounded-full">{count}</span>
+              <span className="text-xs font-black text-black bg-[#FFE066] px-2 py-0.5 rounded-lg border-2 border-black shadow-[1px_1px_0px_0px_#000]">{count}</span>
             </div>
           ))}
         </div>

@@ -5,11 +5,13 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { useNotes, useNoteMutations } from '../hooks/useNotes';
 import { usePageEnterAnimation } from '../../../lib/animations';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export function PinnedNotes() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
+  const { t } = useLanguage();
   
   const { data: notes, isLoading } = useNotes(query, 'pinned');
   const { remove } = useNoteMutations();
@@ -19,9 +21,11 @@ export function PinnedNotes() {
     <div ref={containerRef} className="space-y-6">
       <div className="gsap-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Pinned Notes</h1>
-          <p className="text-sm text-secondary mt-1">
-            Your most important notes.
+          <h1 className="text-3xl font-black text-black dark:text-white tracking-tight flex items-center gap-2">
+            {t('pinnedNotesTitle')} <span>📌</span>
+          </h1>
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">
+            {t('pinnedNotesSubtitle')}
           </p>
         </div>
       </div>
@@ -35,11 +39,11 @@ export function PinnedNotes() {
       ) : notes?.length === 0 ? (
         <EmptyState
           icon={query ? <SearchX /> : <Pin />}
-          title={query ? "No results found" : "No pinned notes"}
+          title={query ? t('noResultsFound') : t('noPinnedNotes')}
           description={
             query
-              ? `We couldn't find anything matching "${query}".`
-              : "Pin a note to easily access it here."
+              ? t('noResultsDesc', { query })
+              : t('noPinnedDesc')
           }
         />
       ) : (
