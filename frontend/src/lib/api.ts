@@ -3,7 +3,8 @@
 // Replaces mockApi.ts for communication with the Express backend
 // ──────────────────────────────────────────────
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
+//const API_BASE = 'http://localhost:5000/api';
 
 // ──────────────────────────────────────────────
 // Token Management
