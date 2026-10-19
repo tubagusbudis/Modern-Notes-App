@@ -25,7 +25,7 @@ export interface NoteCardProps {
   onClick?: () => void;
   onDelete?: () => void;
   className?: string;
-  layout?: 'grid' | 'list';
+  layout?: "grid" | "list";
 }
 
 export function NoteCard({
@@ -41,11 +41,16 @@ export function NoteCard({
   onClick,
   onDelete,
   className,
-  layout = 'grid',
+  layout = "grid",
 }: NoteCardProps) {
   const { t } = useLanguage();
   const isPastel = colorVariant !== "default";
   const cleanPreview = stripHtml(preview);
+
+  // Variabel untuk mendeteksi URL Tunnel secara dinamis
+  const ASSET_URL = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace("/api", "")
+    : "http://localhost:5000";
 
   const colorBgClass = {
     "bg-white dark:bg-[#1E1E1E]": colorVariant === "default",
@@ -60,20 +65,20 @@ export function NoteCard({
     "bg-[#DFE4EA]": colorVariant === "slate-gray",
   };
 
-  if (layout === 'list') {
+  if (layout === "list") {
     return (
       <div
         onClick={onClick}
         className={cn(
           "group relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border-2 border-black shadow-[3px_3px_0px_0px_#000000] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_#000000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#000000] transition-all cursor-pointer overflow-hidden select-none",
           colorBgClass,
-          className
+          className,
         )}
       >
         <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
           {imageUrl && (
             <img
-              src={`http://localhost:5000${imageUrl}`}
+              src={`${ASSET_URL}${imageUrl}`}
               alt="cover"
               className="w-14 h-14 object-cover rounded-xl border-2 border-black shadow-[1.5px_1.5px_0px_0px_#000] shrink-0 hidden sm:block"
             />
@@ -81,31 +86,33 @@ export function NoteCard({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
               {isFavorite && (
-                <span title={t('toggleFavorite')} className="shrink-0">
+                <span title={t("toggleFavorite")} className="shrink-0">
                   <Heart className="w-4 h-4 text-black fill-[#FF7890] stroke-[2.2]" />
                 </span>
               )}
               {isPinned && (
-                <span title={t('togglePin')} className="shrink-0">
+                <span title={t("togglePin")} className="shrink-0">
                   <Pin className="w-4 h-4 text-black fill-[#C4B5FD] stroke-[2.2]" />
                 </span>
               )}
               <h3
                 className={cn(
                   "text-base font-black truncate tracking-tight",
-                  isPastel ? "text-gray-900" : "text-[#111111] dark:text-[#F3F4F6]"
+                  isPastel
+                    ? "text-gray-900"
+                    : "text-[#111111] dark:text-[#F3F4F6]",
                 )}
               >
-                {title || t('untitledNote')}
+                {title || t("untitledNote")}
               </h3>
             </div>
             <p
               className={cn(
                 "text-xs sm:text-sm font-semibold line-clamp-1",
-                isPastel ? "text-gray-800" : "text-gray-600 dark:text-gray-300"
+                isPastel ? "text-gray-800" : "text-gray-600 dark:text-gray-300",
               )}
             >
-              {cleanPreview || t('noContentPreview')}
+              {cleanPreview || t("noContentPreview")}
             </p>
           </div>
         </div>
@@ -133,15 +140,17 @@ export function NoteCard({
             {fileUrl && (
               <div
                 className="flex items-center px-1.5 py-0.5 bg-white border-2 border-black rounded-md shadow-[1px_1px_0px_0px_#000] text-black text-[10px] font-black"
-                title={t('hasAttachment')}
+                title={t("hasAttachment")}
               >
                 <Paperclip className="w-3.5 h-3.5 stroke-[2.5]" />
               </div>
             )}
-            <span className={cn(
-              "text-xs font-black",
-              isPastel ? "text-gray-800" : "text-gray-600 dark:text-gray-300"
-            )}>
+            <span
+              className={cn(
+                "text-xs font-black",
+                isPastel ? "text-gray-800" : "text-gray-600 dark:text-gray-300",
+              )}
+            >
               {date}
             </span>
             {onDelete ? (
@@ -151,7 +160,7 @@ export function NoteCard({
                   onDelete();
                 }}
                 className="p-1.5 rounded-lg border-2 border-transparent hover:border-black hover:bg-white text-black shadow-none hover:shadow-[1px_1px_0px_0px_#000] transition-all cursor-pointer"
-                title={t('deleteNote')}
+                title={t("deleteNote")}
               >
                 <Trash2 className="w-4 h-4 stroke-[2.2]" />
               </button>
@@ -161,7 +170,6 @@ export function NoteCard({
       </div>
     );
   }
-
 
   return (
     <div
@@ -202,12 +210,12 @@ export function NoteCard({
         </div>
         <div className="flex items-center space-x-1.5 flex-shrink-0">
           {isFavorite && (
-            <span title={t('toggleFavorite')} className="p-0.5">
+            <span title={t("toggleFavorite")} className="p-0.5">
               <Heart className="w-4.5 h-4.5 text-black fill-[#FF7890] stroke-[2.2]" />
             </span>
           )}
           {isPinned && (
-            <span title={t('togglePin')} className="p-0.5">
+            <span title={t("togglePin")} className="p-0.5">
               <Pin className="w-4.5 h-4.5 text-black fill-[#C4B5FD] stroke-[2.2]" />
             </span>
           )}
@@ -218,7 +226,7 @@ export function NoteCard({
                 onDelete();
               }}
               className="p-1 rounded-lg border-2 border-transparent hover:border-black hover:bg-white text-black shadow-none hover:shadow-[1px_1px_0px_0px_#000] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-              title={t('deleteNote')}
+              title={t("deleteNote")}
             >
               <Trash2 className="w-4 h-4 stroke-[2.2]" />
             </button>
@@ -233,7 +241,7 @@ export function NoteCard({
       {imageUrl && (
         <div className="mb-3">
           <img
-            src={`http://localhost:5000${imageUrl}`}
+            src={`${ASSET_URL}${imageUrl}`}
             alt="cover"
             className="w-full h-36 object-cover rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_#000]"
           />
@@ -247,7 +255,7 @@ export function NoteCard({
           isPastel ? "text-gray-900" : "text-[#111111] dark:text-[#F3F4F6]",
         )}
       >
-        {title || t('untitledNote')}
+        {title || t("untitledNote")}
       </h3>
       <p
         className={cn(
@@ -255,7 +263,7 @@ export function NoteCard({
           isPastel ? "text-gray-800" : "text-gray-600 dark:text-gray-300",
         )}
       >
-        {cleanPreview || t('noContentPreview')}
+        {cleanPreview || t("noContentPreview")}
       </p>
 
       {/* Footer */}
@@ -272,7 +280,7 @@ export function NoteCard({
           {fileUrl && (
             <div
               className="flex items-center gap-1 px-1.5 py-0.5 bg-white border-2 border-black rounded-md shadow-[1px_1px_0px_0px_#000] text-black text-[10px] font-black"
-              title={t('hasAttachment')}
+              title={t("hasAttachment")}
             >
               <Paperclip className="w-3.5 h-3.5 stroke-[2.5]" />
             </div>
